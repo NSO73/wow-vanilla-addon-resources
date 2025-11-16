@@ -14,8 +14,18 @@ This repository contains essential resources for developing addons for World of 
 
 ### 📚 Documentation
 
-- **WoW-Addon-Development-Reference.md** - Complete API reference for WoW 1.12 addon development
-- **WoW-Programming-Guide-Summary.md** - Comprehensive programming guide and best practices
+#### Main Resource
+- **World of Warcraft Programming - A Guide and Reference for Creating WoW Addons.pdf** - Complete official programming guide and reference
+
+#### English (EN/)
+- **WoW-Addon-Development-Reference_EN.md** - Complete API reference for WoW 1.12 addon development
+- **WoW-Programming-Guide-Summary_EN.md** - Summary of the official programming guide
+- **LUA-5.0-COMPATIBILITY_EN.md** - Lua 5.0 compatibility guide and reference
+
+#### French (FR/)
+- **WoW-Addon-Development-Reference_FR.md** - Référence complète de l'API pour le développement d'addons WoW 1.12
+- **WoW-Programming-Guide-Summary_FR.md** - Résumé du guide de programmation officiel
+- **LUA-5.0-COMPATIBILITY_FR.md** - Guide de compatibilité et référence Lua 5.0
 
 ### 🎨 Game Assets
 
