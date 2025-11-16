@@ -1,0 +1,886 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
+    <!-- LFT minimap button -->
+    <Button name="LFTMinimapButton" parent="Minimap" movable="true" toplevel="true" frameStrata="LOW">
+        <Size x="33" y="33" />
+        <Anchors>
+            <Anchor point="LEFT">
+                <Offset>
+                    <AbsDimension x="-22" y="-14" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentEye" file="Interface\FrameXML\LFT\images\eye\battlenetworking0">
+                    <Size x="36" y="36" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset x="-3" y="3" />
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+                <Texture file="Interface\Minimap\MiniMap-TrackingBorder">
+                    <Size x="52" y="52" />
+                    <Anchors>
+                        <Anchor point="TOPLEFT" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <HighlightTexture alphaMode="ADD" file="Interface\Minimap\UI-Minimap-ZoomButton-Highlight" />
+        <Scripts>
+            <OnLoad>
+                this:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+                this:RegisterForDrag("LeftButton")
+                this:SetClampedToScreen(true)
+            </OnLoad>
+            <OnDragStart>
+                if IsControlKeyDown() then
+                    this:LockHighlight()
+                    this:StartMoving()
+                end
+            </OnDragStart>
+            <OnDragStop>
+                this:UnlockHighlight()
+                this:StopMovingOrSizing()
+                this:SetParent("UIParent")
+            </OnDragStop>
+            <OnLeave>
+                GameTooltip:Hide()
+            </OnLeave>
+            <OnMouseUp>
+                if arg1 == "LeftButton" then
+                    LFT_Toggle()
+                elseif arg1 == "RightButton" then
+                    if IsControlKeyDown() then
+                        this:SetUserPlaced(0)
+                        this:ClearAllPoints()
+                        this:SetParent("Minimap")
+                        this:SetPoint("LEFT", Minimap, -22, -14)
+                    end
+                end
+            </OnMouseUp>
+        </Scripts>
+    </Button>
+    <Frame name="LFTGroupReadyFrame" hidden="true" parent="UIParent" enableMouse="true">
+        <Size>
+            <AbsDimension x="308" y="200" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOP">
+                <Offset>
+                    <AbsDimension x="0" y="-150" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border">
+            <BackgroundInsets>
+                <AbsInset left="11" right="12" top="12" bottom="11" />
+            </BackgroundInsets>
+            <EdgeSize>
+                <AbsValue val="32" />
+            </EdgeSize>
+        </Backdrop>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture name="$parentBackground" file="Interface\FrameXML\LFT\images\background\ui-lfg-background-scarletmonastery">
+                    <Size>
+                        <AbsDimension x="288" y="128" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="-8" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <Texture file="Interface\FrameXML\LFT\images\dungeon_ready_middle">
+                    <Size>
+                        <AbsDimension x="512" y="128" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="10" y="-72" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+                <FontString name="$parentInstanceName" inherits="GameFontNormalLarge" text="Instance Name">
+                    <Size>
+                        <AbsDimension x="300" y="24" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="-37" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <Texture name="$parentRoleTexture" file="Interface\FrameXML\LFT\images\tank2">
+                    <Size>
+                        <AbsDimension x="64" y="64" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="-2" y="-77" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString name="$parentRoleText" inherits="GameFontNormalLarge" text="Tank">
+                    <Size>
+                        <AbsDimension x="100" y="24" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="-70" y="-100" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentObjectivesCompleted" inherits="GameFontNormal">
+                    <Size>
+                        <AbsDimension x="150" y="24" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="-56" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <Texture file="Interface\FrameXML\LFT\images\ui-lfg-separator">
+                    <Size>
+                        <AbsDimension x="256" y="128" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="40" y="-30" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\FrameXML\LFT\images\dungeon_ready_top">
+                    <Size>
+                        <AbsDimension x="512" y="128" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="12" y="-8" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <FontString inherits="GameFontWhite" text="LFT_GROUP_READY_GROUP_FORMED_TEXT">
+                    <Size>
+                        <AbsDimension x="200" y="44" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="-6" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString inherits="GameFontHighlightSmall" text="LFT_GROUP_READY_YOUR_ROLE_TEXT">
+                    <Size>
+                        <AbsDimension x="100" y="24" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="-70" y="-84" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button inherits="UIPanelButtonTemplate" text="LFT_GROUP_READY_CONFIRM_TEXT">
+                <Size>
+                    <AbsDimension x="120" y="28" />
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOMLEFT">
+                        <Offset>
+                            <AbsDimension x="24" y="24" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        LFT_GroupReadyClick(true)
+
+                        PlaySoundFile("Interface\\FrameXML\\LFT\\sound\\lfg_rolecheck.ogg")
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button inherits="UIPanelButtonTemplate" text="LFT_GENERAL_LEAVE_QUEUE_TEXT">
+                <Size>
+                    <AbsDimension x="120" y="28" />
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT">
+                        <Offset>
+                            <AbsDimension x="-24" y="24" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        LFT_GroupReadyClick(false)
+
+                        PlaySoundFile("Interface\\FrameXML\\LFT\\sound\\lfg_denied.ogg")
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Frame>
+    <!-- LFT group ready status. Is shown after the player confirms they're ready for the dungeon. -->
+    <Frame name="LFTGroupReadyStatusFrame" hidden="true" parent="UIParent" enableMouse="true">
+        <Size>
+            <AbsDimension x="360" y="140" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOP">
+                <Offset>
+                    <AbsDimension x="0" y="-150" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border">
+            <BackgroundInsets>
+                <AbsInset left="11" right="12" top="12" bottom="11" />
+            </BackgroundInsets>
+            <EdgeSize>
+                <AbsValue val="32" />
+            </EdgeSize>
+        </Backdrop>
+        <Layers>
+            <Layer level="ARTWORK">
+                <FontString inherits="GameFontWhite" text="LFT_GROUP_READY_STATUS_TEXT">
+                    <Size>
+                        <AbsDimension x="100" y="44" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="0" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <Texture file="Interface\FrameXML\LFT\images\tank2">
+                    <Size>
+                        <AbsDimension x="64" y="64" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="20" y="-40" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\FrameXML\LFT\images\healer2">
+                    <Size>
+                        <AbsDimension x="64" y="64" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="84" y="-40" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\FrameXML\LFT\images\damage2">
+                    <Size>
+                        <AbsDimension x="64" y="64" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="148" y="-40" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\FrameXML\LFT\images\damage2">
+                    <Size>
+                        <AbsDimension x="64" y="64" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="214" y="-40" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\FrameXML\LFT\images\damage2">
+                    <Size>
+                        <AbsDimension x="64" y="64" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="278" y="-40" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+                <Texture name="$parentTankCheck" file="Interface\FrameXML\LFT\images\readycheck-waiting">
+                    <Size>
+                        <AbsDimension x="42" y="42" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="20" y="-70" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentHealerCheck" file="Interface\FrameXML\LFT\images\readycheck-waiting">
+                    <Size>
+                        <AbsDimension x="42" y="42" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentTankCheck" relativePoint="RIGHT">
+                            <Offset>
+                                <AbsDimension x="22" y="0" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentDamage1Check" file="Interface\FrameXML\LFT\images\readycheck-waiting">
+                    <Size>
+                        <AbsDimension x="42" y="42" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentHealerCheck" relativePoint="RIGHT">
+                            <Offset>
+                                <AbsDimension x="22" y="0" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentDamage2Check" file="Interface\FrameXML\LFT\images\readycheck-waiting">
+                    <Size>
+                        <AbsDimension x="42" y="42" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentDamage1Check" relativePoint="RIGHT">
+                            <Offset>
+                                <AbsDimension x="22" y="0" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture name="$parentDamage3Check" file="Interface\FrameXML\LFT\images\readycheck-waiting">
+                    <Size>
+                        <AbsDimension x="42" y="42" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="LEFT" relativeTo="$parentDamage2Check" relativePoint="RIGHT">
+                            <Offset>
+                                <AbsDimension x="22" y="0" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button inherits="UIPanelCloseButton">
+                <Anchors>
+                    <Anchor point="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="-3" y="-3" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        HideUIPanel(this:GetParent())
+
+                        PlaySound("GAMEDIALOGCLOSE")
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+    </Frame>
+    <!-- LFT role check frame -->
+    <Frame name="LFTRoleCheckFrame" hidden="true" parent="UIParent" enableMouse="true">
+        <Size>
+            <AbsDimension x="250" y="180" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOP">
+                <Offset>
+                    <AbsDimension x="0" y="-150" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border">
+            <BackgroundInsets>
+                <AbsInset left="11" right="12" top="12" bottom="11" />
+            </BackgroundInsets>
+            <EdgeSize>
+                <AbsValue val="32" />
+            </EdgeSize>
+        </Backdrop>
+        <Layers>
+            <Layer level="OVERLAY">
+                <FontString inherits="GameFontWhite" justifyH="CENTER" text="LFT_ROLE_CHECK_TITLE_TEXT">
+                    <Size>
+                        <AbsDimension x="200" y="48" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP" />
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentInstancesText" inherits="GameFontNormalSmall" justifyH="CENTER">
+                    <Size>
+                        <AbsDimension x="250" y="24" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="-110" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentRoleTank" inherits="LFTRoleButtonTemplate">
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="20" y="-42" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this.role = "TANK"
+                        this.tooltip = LFT_ROLE_TANK_TOOLTIP
+
+                        getglobal(this:GetName() .. "Icon"):SetTexture("Interface\\FrameXML\\LFT\\images\\tank2")
+                    </OnLoad>
+                </Scripts>
+            </Button>
+            <Button name="$parentRoleHealer" inherits="LFTRoleButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentRoleTank" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="8" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this.role = "HEALER"
+                        this.tooltip = LFT_ROLE_HEALER_TOOLTIP
+
+                        getglobal(this:GetName() .. "Icon"):SetTexture("Interface\\FrameXML\\LFT\\images\\healer2")
+                    </OnLoad>
+                </Scripts>
+            </Button>
+            <Button name="$parentRoleDamage" inherits="LFTRoleButtonTemplate">
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentRoleHealer" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="8" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this.role = "DAMAGE"
+                        this.tooltip = LFT_ROLE_DAMAGE_TOOLTIP
+
+                        getglobal(this:GetName() .. "Icon"):SetTexture("Interface\\FrameXML\\LFT\\images\\damage2")
+                    </OnLoad>
+                </Scripts>
+            </Button>
+            <Button name="$parentConfirmButton" inherits="UIPanelButtonTemplate" text="LFT_ROLE_CHECK_CONFIRM_TEXT">
+                <Size>
+                    <AbsDimension x="90" y="24" />
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="-50" y="20" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:Disable()
+                    </OnLoad>
+                    <OnClick>
+                        LFT_RoleCheckClick(true)
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button inherits="UIPanelButtonTemplate" text="LFT_ROLE_CHECK_DECLINE_TEXT">
+                <Size>
+                    <AbsDimension x="90" y="24" />
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="50" y="20" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        LFT_RoleCheckClick()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Frame name="$parentInstances">
+                <Size>
+                    <AbsDimension x="240" y="24" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOP">
+                        <Offset>
+                            <AbsDimension x="0" y="-110" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="OVERLAY">
+                        <FontString name="$parentText" inherits="GameFontNormalSmall" justifyH="CENTER" setAllPoints="true" />
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnEnter>
+                        if this.instances then
+                            GameTooltip:SetOwner(this, "ANCHOR_CURSOR")
+                            GameTooltip:SetText(this.instances)
+                            GameTooltip:Show()
+                        end
+                    </OnEnter>
+                    <OnLeave>
+                        GameTooltip:Hide()
+                    </OnLeave>
+                </Scripts>
+            </Frame>
+        </Frames>
+    </Frame>
+    <!-- LFT main frame -->
+    <Frame name="LFTFrame" parent="UIParent" hidden="true" toplevel="true" movable="true" enableMouse="true">
+        <Size>
+            <AbsDimension x="384" y="512" />
+        </Size>
+        <Anchors>
+            <Anchor point="TOPLEFT">
+                <Offset>
+                    <AbsDimension x="0" y="-104" />
+                </Offset>
+            </Anchor>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture file="Interface\FrameXML\LFT\images\ui-lfg-portrait">
+                    <Size>
+                        <AbsDimension x="64" y="64" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT">
+                            <Offset>
+                                <AbsDimension x="7" y="-6" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+                <Texture file="Interface\FrameXML\LFT\images\ui-lfg-background-dungeonwall">
+                    <Size>
+                        <AbsDimension x="512" y="256" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="85" y="-155" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="ARTWORK">
+                <Texture file="Interface\FrameXML\LFT\images\ui-lfg-frame">
+                    <Size>
+                        <AbsDimension x="512" y="512" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" />
+                    </Anchors>
+                </Texture>
+            </Layer>
+            <Layer level="OVERLAY">
+                <FontString inherits="GameFontNormal" text="LFT_MINIMAP_TOOLTIP_LINE_1">
+                    <Anchors>
+                        <Anchor point="TOP">
+                            <Offset>
+                                <AbsDimension x="0" y="-18" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+                <FontString name="$parentWarningText" inherits="GameFontWhite">
+                    <Size>
+                        <AbsDimension x="300" y="326" />
+                    </Size>
+                    <Anchors>
+                        <Anchor point="CENTER">
+                            <Offset>
+                                <AbsDimension x="-10" y="30" />
+                            </Offset>
+                        </Anchor>
+                    </Anchors>
+                </FontString>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Button name="$parentRoleTank" inherits="LFTRoleButtonTemplate">
+                <Size>
+                    <AbsDimension x="54" y="54" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="74" y="-52" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentBackground" file="Interface\FrameXML\LFT\images\ui-lfg-role-background">
+                            <TexCoords left="0.2968" right="0.5937" top="0" bottom="0.5937" />
+                            <Size>
+                                <AbsDimension x="84" y="84" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="-12" y="14" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnLoad>
+                        this.role = "TANK"
+                        this.tooltip = LFT_ROLE_TANK_TOOLTIP
+
+                        getglobal(this:GetName() .. "Icon"):SetTexture("Interface\\FrameXML\\LFT\\images\\tank2")
+                        getglobal(this:GetName() .. "Background"):SetVertexColor(1, 1, 1, 0.6)
+                    </OnLoad>
+                </Scripts>
+            </Button>
+            <Button name="$parentRoleHealer" inherits="LFTRoleButtonTemplate">
+                <Size>
+                    <AbsDimension x="54" y="54" />
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentRoleTank" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="44" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentBackground" file="Interface\FrameXML\LFT\images\ui-lfg-role-background" setAllPoints="true">
+                            <TexCoords left="0" right="0.2968" top="0" bottom="0.5937" />
+                            <Size>
+                                <AbsDimension x="84" y="84" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="-12" y="12" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnLoad>
+                        this.role = "HEALER"
+                        this.tooltip = LFT_ROLE_HEALER_TOOLTIP
+
+                        getglobal(this:GetName() .. "Icon"):SetTexture("Interface\\FrameXML\\LFT\\images\\healer2")
+                        getglobal(this:GetName() .. "Background"):SetVertexColor(1, 1, 1, 0.6)
+                    </OnLoad>
+                </Scripts>
+            </Button>
+            <Button name="$parentRoleDamage" inherits="LFTRoleButtonTemplate">
+                <Size>
+                    <AbsDimension x="54" y="54" />
+                </Size>
+                <Anchors>
+                    <Anchor point="LEFT" relativeTo="$parentRoleHealer" relativePoint="RIGHT">
+                        <Offset>
+                            <AbsDimension x="44" y="0" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <Texture name="$parentBackground" file="Interface\FrameXML\LFT\images\ui-lfg-role-background">
+                            <TexCoords left="0.5937" right="0.8906" top="0" bottom="0.5937" />
+                            <Size>
+                                <AbsDimension x="84" y="84" />
+                            </Size>
+                            <Anchors>
+                                <Anchor point="TOPLEFT">
+                                    <Offset>
+                                        <AbsDimension x="-12" y="14" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </Texture>
+                    </Layer>
+                </Layers>
+                <Scripts>
+                    <OnLoad>
+                        this.role = "DAMAGE"
+                        this.tooltip = LFT_ROLE_DAMAGE_TOOLTIP
+
+                        getglobal(this:GetName() .. "Icon"):SetTexture("Interface\\FrameXML\\LFT\\images\\damage2")
+                        getglobal(this:GetName() .. "Background"):SetVertexColor(1, 1, 1, 0.6)
+                    </OnLoad>
+                </Scripts>
+            </Button>
+            <ScrollFrame name="$parentInstancesList" inherits="UIPanelScrollFrameTemplate">
+                <Size>
+                    <AbsDimension x="295" y="252" />
+                </Size>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="25" y="-158" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <ScrollChild>
+                    <Frame name="$parentContent">
+                        <Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background2" />
+                        <Size>
+                            <AbsDimension x="298" y="230" />
+                        </Size>
+                        <Anchors>
+                            <Anchor point="TOPLEFT">
+                                <Offset>
+                                    <AbsDimension x="-3" y="0" />
+                                </Offset>
+                            </Anchor>
+                        </Anchors>
+                    </Frame>
+                </ScrollChild>
+            </ScrollFrame>
+            <Button inherits="UIPanelCloseButton">
+                <Anchors>
+                    <Anchor point="TOPRIGHT">
+                        <Offset>
+                            <AbsDimension x="-27" y="-8" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnClick>
+                        LFT_Toggle()
+                    </OnClick>
+                </Scripts>
+            </Button>
+            <Button name="$parentDropDown" inherits="UIDropDownMenuTemplate">
+                <Layers>
+                    <Layer level="BACKGROUND">
+                        <FontString inherits="GameFontNormal" text="LFT_GENERAL_INSTANCE_TYPE_TEXT">
+                            <Anchors>
+                                <Anchor point="LEFT" relativePoint="LEFT">
+                                    <Offset>
+                                        <AbsDimension x="-24" y="2" />
+                                    </Offset>
+                                </Anchor>
+                            </Anchors>
+                        </FontString>
+                    </Layer>
+                </Layers>
+                <Anchors>
+                    <Anchor point="TOPLEFT">
+                        <Offset>
+                            <AbsDimension x="150" y="-125" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        LFT_InitDropDown()
+                    </OnLoad>
+                </Scripts>
+            </Button>
+            <Button name="$parentMainButton" inherits="UIPanelButtonTemplate" text="LFT_MAIN_BUTTON_FIND_GROUP_TEXT">
+                <Size>
+                    <AbsDimension x="104" y="21" />
+                </Size>
+                <Anchors>
+                    <Anchor point="BOTTOM">
+                        <Offset>
+                            <AbsDimension x="-8" y="79" />
+                        </Offset>
+                    </Anchor>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        this:Disable()
+                    </OnLoad>
+                    <OnClick>
+                        LFT_MainButtonClick()
+                    </OnClick>
+                </Scripts>
+            </Button>
+        </Frames>
+        <Scripts>
+            <OnLoad>
+                UIPanelWindows[this:GetName()] = { area = "left", pushable = 1 }
+                tinsert(UISpecialFrames, this:GetName())
+            </OnLoad>
+            <OnShow>
+                PlaySound("GAMEDIALOGOPEN")
+            </OnShow>
+            <OnHide>
+                PlaySound("GAMEDIALOGCLOSE")
+            </OnHide>
+        </Scripts>
+    </Frame>
+</Ui>
