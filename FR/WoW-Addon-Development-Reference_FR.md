@@ -441,6 +441,315 @@ PickupPlayerMoney(amount)               -- Prend argent
 DropCursorMoney()                       -- Lâche argent
 ```
 
+### 16. Fonctions d'Enchères
+
+```lua
+-- Hôtel des Ventes
+CloseAuctionHouse()                     -- Ferme fenêtre enchères
+CanSendAuctionQuery()                   -- Peut chercher maintenant ?
+QueryAuctionItems("name", minLevel, maxLevel, invTypeIndex, classIndex, subclassIndex, page, isUsable, qualityIndex)
+
+-- Informations enchères
+GetNumAuctionItems("type")              -- Nombre d'items ("list", "bidder", "owner")
+GetAuctionItemInfo("type", index)       -- Détails de l'item
+GetAuctionItemLink("type", index)       -- ItemLink
+GetAuctionItemTimeLeft("type", index)   -- Temps restant (1-4)
+GetAuctionSellItemInfo()                -- Info item à vendre
+
+-- Enchérir et vendre
+PlaceAuctionBid("type", index, bid)     -- Placer une enchère
+StartAuction(minBid, buyoutPrice, runTime) -- Démarrer enchère
+CancelAuction(index)                    -- Annuler votre enchère
+ClickAuctionSellItemButton()            -- Placer item dans slot vente
+
+-- Catégories
+GetAuctionItemClasses()                 -- Catégories principales
+GetAuctionItemSubClasses(classIndex)    -- Sous-catégories
+```
+
+### 17. Fonctions de Banque
+
+```lua
+CloseBankFrame()                        -- Ferme fenêtre banque
+GetNumBankSlots()                       -- Nombre de slots banque achetés
+GetBankSlotCost(numSlots)               -- Coût prochain slot
+PurchaseSlot()                          -- Acheter prochain slot
+BankButtonIDToInvSlotID(buttonID)       -- Convertir bouton banque en slot inventaire
+```
+
+### 18. Fonctions de Champ de Bataille/PvP
+
+```lua
+-- Gestion de file
+JoinBattlefield(index[, joinAs])        -- Rejoindre file BG
+LeaveBattlefield()                      -- Quitter champ de bataille
+AcceptBattlefieldPort(index[, accept])  -- Accepter/refuser port
+GetBattlefieldStatus(index)             -- Statut de file
+
+-- Informations BG
+GetNumBattlefields()                    -- Nombre d'instances disponibles
+GetBattlefieldInfo(index)               -- Détails BG
+GetBattlefieldWinner()                  -- Vainqueur
+GetBattlefieldInstanceRunTime()         -- Temps depuis début (ms)
+
+-- Scores
+GetNumBattlefieldScores()               -- Nombre de joueurs au tableau
+GetBattlefieldScore(index)              -- Score du joueur
+RequestBattlefieldScoreData()           -- Demander données fraîches
+
+-- Positions carte
+GetNumBattlefieldFlagPositions()        -- Nombre de drapeaux
+GetBattlefieldFlagPosition(index)       -- Position drapeau sur carte
+GetBattlefieldPosition(index)           -- Position joueur
+```
+
+### 19. Fonctions de Guilde
+
+```lua
+-- Informations guilde
+IsInGuild()                             -- Dans une guilde ?
+GetGuildInfo("unit")                    -- Nom guilde de l'unité
+GetNumGuildMembers(offline)             -- Nombre de membres
+GetGuildRosterInfo(index)               -- Info membre
+GetGuildRosterMOTD()                    -- Message du Jour
+GuildRoster()                           -- Demander mise à jour roster
+
+-- Gestion guilde
+GuildInviteByName("name")               -- Inviter joueur
+GuildUninviteByName("name")             -- Expulser joueur
+GuildPromoteByName("name")              -- Promouvoir joueur
+GuildDemoteByName("name")               -- Rétrograder joueur
+GuildLeave()                            -- Quitter guilde
+GuildDisband()                          -- Dissoudre guilde
+GuildSetMOTD("text")                    -- Définir MOTD
+
+-- Permissions
+CanGuildInvite()                        -- Peut inviter ?
+CanGuildPromote()                       -- Peut promouvoir ?
+CanGuildRemove()                        -- Peut expulser ?
+CanEditMOTD()                           -- Peut éditer MOTD ?
+CanEditPublicNote()                     -- Peut éditer notes publiques ?
+CanEditOfficerNote()                    -- Peut éditer notes officier ?
+
+-- Notes
+GuildRosterSetPublicNote(index, "note") -- Définir note publique
+GuildRosterSetOfficerNote(index, "note")-- Définir note officier
+```
+
+### 20. Fonctions de Courrier
+
+```lua
+-- Lecture courrier
+GetInboxNumItems()                      -- Nombre d'items dans boîte
+GetInboxHeaderInfo(index)               -- Info entête courrier
+GetInboxText(index)                     -- Corps du message
+GetInboxItem(index)                     -- Info pièce jointe
+CheckInbox()                            -- Rafraîchir boîte
+
+-- Prendre items
+TakeInboxItem(index)                    -- Prendre pièce jointe
+TakeInboxMoney(index)                   -- Prendre argent
+TakeInboxTextItem(index)                -- Prendre copie lettre
+DeleteInboxItem(index)                  -- Supprimer courrier
+ReturnInboxItem(index)                  -- Retourner à l'envoyeur
+
+-- Envoi courrier
+SendMail("target", "subject", "body")   -- Envoyer courrier
+SetSendMailMoney(amount)                -- Joindre argent
+SetSendMailCOD(amount)                  -- Définir montant contre-remboursement
+ClickSendMailItemButton()               -- Joindre item
+ClearSendMail()                         -- Effacer fenêtre rédaction
+
+-- Statut
+HasNewMail()                            -- Nouveau courrier ?
+CloseMail()                             -- Fermer boîte aux lettres
+```
+
+### 21. Fonctions de Familier
+
+```lua
+-- Contrôle familier
+PetAttack()                             -- Attaquer cible
+PetFollow()                             -- Suivre maître
+PetWait()                               -- Rester sur place
+PetDefensiveMode()                      -- Mode défensif
+PetAggressiveMode()                     -- Mode agressif
+PetPassiveMode()                        -- Mode passif
+
+-- Actions familier
+CastPetAction(index)                    -- Utiliser aptitude
+TogglePetAutocast(index)                -- Activer/désactiver autocast
+GetPetActionInfo(index)                 -- Info slot barre d'action
+GetPetActionCooldown(index)             -- Cooldown aptitude
+IsPetAttackActive()                     -- Attaque en cours ?
+PetStopAttack()                         -- Arrêter attaque
+
+-- Informations familier
+GetPetExperience()                      -- XP et XP max
+GetPetHappiness()                       -- Niveau bonheur
+GetPetLoyalty()                         -- Niveau loyauté
+GetPetFoodTypes()                       -- Types nourriture acceptés
+GetPetTrainingPoints()                  -- Points d'entraînement
+HasPetUI()                              -- A une interface familier ?
+
+-- Gestion familier
+PetDismiss()                            -- Renvoyer familier
+PetAbandon()                            -- Abandonner définitivement
+PetRename("name")                       -- Renommer familier
+PetCanBeRenamed()                       -- Peut renommer ?
+PetCanBeAbandoned()                     -- Peut abandonner ?
+```
+
+### 22. Fonctions de Taxi
+
+```lua
+NumTaxiNodes()                          -- Nombre de points de vol
+TaxiNodeName(slot)                      -- Nom point de vol
+TaxiNodeCost(slot)                      -- Coût en cuivre
+TaxiNodeGetType(slot)                   -- Statut ("CURRENT", "REACHABLE", "DISTANT")
+TaxiNodePosition(slot)                  -- Position sur carte
+TakeTaxiNode(slot)                      -- Prendre le vol
+CloseTaxiMap()                          -- Fermer carte des vols
+UnitOnTaxi("unit")                      -- Unité en vol ?
+```
+
+### 23. Fonctions d'Échange
+
+```lua
+-- Gestion échange
+InitiateTrade("unit")                   -- Commencer échange avec unité
+AcceptTrade()                           -- Accepter échange
+CancelTrade()                           -- Annuler échange
+CloseTrade()                            -- Fermer fenêtre échange
+
+-- Items échange
+ClickTradeButton(index)                 -- Cliquer slot échange (1-7)
+GetTradePlayerItemInfo(index)           -- Info votre item
+GetTradePlayerItemLink(index)           -- Lien votre item
+GetTradeTargetItemInfo(index)           -- Info leur item
+GetTradeTargetItemLink(index)           -- Lien leur item
+
+-- Argent échange
+SetTradeMoney(amount)                   -- Définir argent échange
+GetPlayerTradeMoney()                   -- Votre argent offert
+GetTargetTradeMoney()                   -- Leur argent offert
+```
+
+### 24. Fonctions de Métier
+
+```lua
+-- Fenêtre métier
+CloseTradeSkill()                       -- Fermer fenêtre
+GetNumTradeSkills()                     -- Nombre de recettes
+GetFirstTradeSkill()                    -- Premier index non-header
+GetTradeSkillLine()                     -- Nom et niveau compétence
+
+-- Informations recette
+GetTradeSkillInfo(index)                -- Info recette
+GetTradeSkillIcon(index)                -- Icône recette
+GetTradeSkillNumMade(index)             -- Items produits
+GetTradeSkillCooldown(index)            -- Cooldown restant
+GetTradeSkillItemLink(index)            -- Lien item résultat
+
+-- Composants
+GetTradeSkillNumReagents(index)         -- Nombre types composants
+GetTradeSkillReagentInfo(index, reagentIndex) -- Info composant
+GetTradeSkillReagentItemLink(index, reagentIndex) -- Lien composant
+
+-- Fabrication
+DoTradeSkill(index[, count])            -- Fabriquer item
+SelectTradeSkill(index)                 -- Sélectionner recette
+GetTradeSkillSelectionIndex()           -- Recette sélectionnée
+
+-- Filtrage
+GetTradeSkillSubClasses()               -- Sous-catégories disponibles
+GetTradeSkillInvSlots()                 -- Types slots disponibles
+CollapseTradeSkillSubClass(index)       -- Réduire header
+ExpandTradeSkillSubClass(index)         -- Développer header
+```
+
+### 25. Fonctions d'Entraîneur
+
+```lua
+-- Fenêtre entraîneur
+CloseTrainer()                          -- Fermer fenêtre entraîneur
+GetNumTrainerServices()                 -- Nombre compétences enseignables
+GetTrainerGreetingText()                -- Salutation entraîneur
+
+-- Informations compétence
+GetTrainerServiceInfo(index)            -- Info compétence
+GetTrainerServiceDescription(index)     -- Description compétence
+GetTrainerServiceIcon(index)            -- Icône compétence
+GetTrainerServiceCost(index)            -- Coût compétence
+GetTrainerServiceLevelReq(index)        -- Niveau requis
+GetTrainerServiceSkillReq(index)        -- Compétence requise
+
+-- Apprentissage
+BuyTrainerService(index)                -- Apprendre compétence
+IsTradeskillTrainer()                   -- Entraîneur de métier ?
+IsTalentTrainer()                       -- Entraîneur de classe ?
+```
+
+### 26. Fonctions d'Honneur/PvP
+
+```lua
+-- Statistiques honneur
+GetPVPSessionStats()                    -- HKs/DHKs cette session
+GetPVPYesterdayStats()                  -- Stats d'hier
+GetPVPThisWeekStats()                   -- Stats cette semaine
+GetPVPLastWeekStats()                   -- Stats semaine dernière
+GetPVPLifetimeStats()                   -- Stats à vie
+
+-- Informations rang
+GetPVPRankInfo(rank[, "unit"])          -- Nom et numéro rang
+GetPVPRankProgress()                    -- Progression prochain rang (0-1)
+UnitPVPRank("unit")                     -- Rang PvP unité
+UnitPVPName("unit")                     -- Nom avec préfixe rang
+
+-- Inspection
+RequestInspectHonorData()               -- Demander honneur inspecté
+HasInspectHonorData()                   -- Données disponibles ?
+GetInspectHonorData()                   -- Honneur unité inspectée
+```
+
+### 27. Fonctions de Faction/Réputation
+
+```lua
+GetNumFactions()                        -- Nombre entrées faction
+GetFactionInfo(index)                   -- Détails faction
+ExpandFactionHeader(index)              -- Développer header faction
+CollapseFactionHeader(index)            -- Réduire header faction
+FactionToggleAtWar(index)               -- Basculer statut en guerre
+SetWatchedFactionIndex(index)           -- Surveiller faction sur barre
+GetWatchedFactionInfo()                 -- Info faction surveillée
+IsFactionInactive(index)                -- Faction inactive ?
+SetFactionActive(index)                 -- Définir faction active
+SetFactionInactive(index)               -- Définir faction inactive
+```
+
+### 28. Fonctions Who/Amis
+
+```lua
+-- Recherche Who
+SendWho("filter")                       -- Envoyer requête /who
+GetNumWhoResults()                      -- Nombre résultats
+GetWhoInfo(index)                       -- Info résultat
+SetWhoToUI(flag)                        -- Envoyer à UI vs chat
+
+-- Amis
+GetNumFriends()                         -- Nombre d'amis
+GetFriendInfo(index)                    -- Info ami
+AddFriend("name")                       -- Ajouter ami
+RemoveFriend("name" or index)           -- Supprimer ami
+ShowFriends()                           -- Demander mise à jour amis
+
+-- Ignorer
+GetNumIgnores()                         -- Nombre ignorés
+GetIgnoreName(index)                    -- Nom ignoré
+AddIgnore("name")                       -- Ajouter à ignorer
+DelIgnore("name")                       -- Supprimer de ignorer
+```
+
 ---
 
 ## Système d'Événements
@@ -818,6 +1127,383 @@ PLAYER_PVP_KILLS_CHANGED
 PLAYER_FLAGS_CHANGED
     - arg1: unitID
     - Flags changent (AFK, DND, etc.)
+```
+
+#### 15. Événements d'Hôtel des Ventes
+
+```
+AUCTION_HOUSE_SHOW
+    - Fenêtre de l'hôtel des ventes ouverte
+
+AUCTION_HOUSE_CLOSED
+    - Fenêtre de l'hôtel des ventes fermée
+
+AUCTION_ITEM_LIST_UPDATE
+    - Liste des enchères mise à jour
+
+AUCTION_OWNED_LIST_UPDATE
+    - Liste de vos enchères mise à jour
+
+AUCTION_BIDDER_LIST_UPDATE
+    - Liste de vos offres mise à jour
+
+NEW_AUCTION_UPDATE
+    - Nouvelle enchère créée
+```
+
+#### 16. Événements de Duel
+
+```
+DUEL_REQUESTED
+    - arg1: nom de l'adversaire
+    - Défi de duel reçu
+
+DUEL_OUTOFBOUNDS
+    - Joueur hors des limites du duel
+
+DUEL_INBOUNDS
+    - Joueur de retour dans les limites
+
+DUEL_FINISHED
+    - Duel terminé
+```
+
+#### 17. Événements de Guilde
+
+```
+GUILD_ROSTER_UPDATE
+    - Roster de guilde mis à jour
+
+GUILD_MOTD
+    - Message du Jour de guilde reçu
+
+GUILD_INVITE_REQUEST
+    - arg1: nom inviteur, arg2: nom guilde
+    - Invitation de guilde reçue
+
+GUILD_INVITE_CANCEL
+    - Invitation de guilde refusée
+
+GUILD_REGISTRAR_SHOW
+    - Fenêtre du registraire ouverte
+
+GUILD_REGISTRAR_CLOSED
+    - Fenêtre du registraire fermée
+```
+
+#### 18. Événements d'Échange
+
+```
+TRADE_SHOW
+    - Fenêtre d'échange ouverte
+
+TRADE_CLOSED
+    - Fenêtre d'échange fermée
+
+TRADE_REQUEST
+    - arg1: nom du joueur
+    - Demande d'échange reçue
+
+TRADE_REQUEST_CANCEL
+    - Demande d'échange annulée
+
+TRADE_ACCEPT_UPDATE
+    - arg1: joueur accepté (1/0), arg2: cible accepté (1/0)
+    - Statut d'acceptation changé
+
+TRADE_MONEY_CHANGED
+    - Argent dans l'échange changé
+
+TRADE_PLAYER_ITEM_CHANGED
+    - arg1: slot d'item
+    - Votre item d'échange changé
+
+TRADE_TARGET_ITEM_CHANGED
+    - arg1: slot d'item
+    - Item de la cible changé
+
+TRADE_UPDATE
+    - Fenêtre d'échange mise à jour
+```
+
+#### 19. Événements de Dialogue/Interaction PNJ
+
+```
+GOSSIP_SHOW
+    - Fenêtre de dialogue PNJ ouverte
+
+GOSSIP_CLOSED
+    - arg1: bouton souris (nil si hors portée)
+    - Fenêtre de dialogue fermée
+
+GOSSIP_ENTER_CODE
+    - Entrée de code demandée
+```
+
+#### 20. Événements de Familier
+
+```
+PET_BAR_UPDATE
+    - Barre d'action du familier mise à jour
+
+PET_BAR_UPDATE_COOLDOWN
+    - Cooldown d'aptitude du familier
+
+PET_BAR_SHOWGRID
+    - Barre du familier doit s'afficher
+
+PET_BAR_HIDEGRID
+    - Barre du familier doit se cacher
+
+PET_ATTACK_START
+    - Familier commence à attaquer
+
+PET_ATTACK_STOP
+    - Familier arrête d'attaquer
+
+PET_UI_UPDATE
+    - Interface familier à mettre à jour
+
+PET_UI_CLOSE
+    - Interface familier fermée
+
+PET_STABLE_SHOW
+    - Fenêtre des écuries ouverte
+
+PET_STABLE_UPDATE
+    - Informations écuries mises à jour
+
+PET_STABLE_CLOSED
+    - Fenêtre des écuries fermée
+```
+
+#### 21. Événements d'Entraîneur/Artisanat
+
+```
+TRAINER_SHOW
+    - Fenêtre d'entraîneur ouverte
+
+TRAINER_UPDATE
+    - Fenêtre d'entraîneur mise à jour
+
+TRAINER_CLOSED
+    - Fenêtre d'entraîneur fermée
+
+CRAFT_SHOW
+    - arg1: bouton souris
+    - Fenêtre d'artisanat ouverte (Enchantement)
+
+CRAFT_UPDATE
+    - Fenêtre d'artisanat mise à jour
+
+CRAFT_CLOSE
+    - arg1: bouton souris
+    - Fenêtre d'artisanat fermée
+
+TRADE_SKILL_SHOW
+    - Fenêtre de métier ouverte
+
+TRADE_SKILL_UPDATE
+    - Fenêtre de métier mise à jour
+
+TRADE_SKILL_CLOSE
+    - Fenêtre de métier fermée
+```
+
+#### 22. Événements de Taxi/Voyage
+
+```
+TAXIMAP_OPENED
+    - Carte des trajets ouverte
+
+TAXIMAP_CLOSED
+    - Carte des trajets fermée
+```
+
+#### 23. Événements de Banque
+
+```
+BANKFRAME_OPENED
+    - Fenêtre de banque ouverte
+
+BANKFRAME_CLOSED
+    - Fenêtre de banque fermée
+
+PLAYERBANKSLOTS_CHANGED
+    - Contenu slot banque changé
+
+PLAYERBANKBAGSLOTS_CHANGED
+    - Slot de sac banque changé
+```
+
+#### 24. Événements du Journal de Combat
+
+```
+CHAT_MSG_COMBAT_SELF_HITS
+    - arg1: message de combat
+    - Vous touchez quelque chose
+
+CHAT_MSG_COMBAT_SELF_MISSES
+    - arg1: message de combat
+    - Vous ratez
+
+CHAT_MSG_COMBAT_CREATURE_VS_SELF_HITS
+    - arg1: message de combat
+    - Créature vous touche
+
+CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES
+    - arg1: message de combat
+    - Créature vous rate
+
+CHAT_MSG_COMBAT_CREATURE_VS_PARTY_HITS
+    - arg1: message de combat
+    - Créature touche membre du groupe
+
+CHAT_MSG_COMBAT_CREATURE_VS_CREATURE_HITS
+    - arg1: message de combat
+    - Créature touche autre créature
+
+CHAT_MSG_COMBAT_HOSTILE_DEATH
+    - arg1: message de mort
+    - Unité hostile morte
+
+CHAT_MSG_COMBAT_FRIENDLY_DEATH
+    - Unité amie morte
+
+CHAT_MSG_COMBAT_XP_GAIN
+    - arg1: message
+    - XP gagnée au combat
+
+CHAT_MSG_COMBAT_HONOR_GAIN
+    - arg1: message
+    - Honneur gagné
+```
+
+#### 25. Événements de Sorts du Journal de Combat
+
+```
+CHAT_MSG_SPELL_SELF_DAMAGE
+    - arg1: message de combat
+    - Votre sort inflige des dégâts
+
+CHAT_MSG_SPELL_SELF_BUFF
+    - arg1: message de combat
+    - Votre sort bénéfique
+
+CHAT_MSG_SPELL_CREATURE_VS_SELF_DAMAGE
+    - arg1: message de combat
+    - Sort de créature vous touche
+
+CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+    - arg1: message
+    - Dégâts périodiques sur vous (DoTs)
+
+CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS
+    - arg1: message
+    - Effet périodique bénéfique (HoTs)
+
+CHAT_MSG_SPELL_AURA_GONE_SELF
+    - arg1: message
+    - Buff/debuff disparaît de vous
+
+CHAT_MSG_SPELL_AURA_GONE_OTHER
+    - arg1: message
+    - Buff/debuff disparaît d'autre
+
+CHAT_MSG_SPELL_FAILED_LOCALPLAYER
+    - arg1: message
+    - Votre sort échoue
+```
+
+#### 26. Événements Divers
+
+```
+PLAYER_CAMPING
+    - Joueur campe (déconnexion)
+
+PLAYER_QUITING
+    - Joueur a cliqué quitter
+
+PLAYER_UPDATE_RESTING
+    - État de repos changé
+
+PLAYER_XP_UPDATE
+    - XP mise à jour
+
+PLAYER_LEVEL_UP
+    - arg1: nouveau niveau, arg2-9: gains de stats
+    - Joueur monte de niveau
+
+RESURRECT_REQUEST
+    - arg1: nom du joueur
+    - Résurrection offerte
+
+CONFIRM_XP_LOSS
+    - Confirmation ange gardien
+
+CONFIRM_BINDER
+    - Confirmation pierre de foyer
+
+CONFIRM_SUMMON
+    - Confirmation invocation
+
+CONFIRM_TALENT_WIPE
+    - Confirmation réinitialisation talents
+
+CONFIRM_PET_UNLEARN
+    - Confirmation désapprentissage familier
+
+SCREENSHOT_SUCCEEDED
+    - Capture d'écran réussie
+
+SCREENSHOT_FAILED
+    - Capture d'écran échouée
+
+TIME_PLAYED_MSG
+    - arg1: temps total, arg2: temps niveau
+    - Réponse /played
+
+MEMORY_EXHAUSTED
+    - arg1: limite mémoire (Mo)
+    - Limite mémoire UI atteinte
+
+MEMORY_RECOVERED
+    - Récupération erreur mémoire
+
+LANGUAGE_LIST_CHANGED
+    - Langues disponibles changées
+
+SKILL_LINES_CHANGED
+    - Compétences mises à jour
+
+UI_ERROR_MESSAGE
+    - arg1: message d'erreur
+    - Message d'erreur rouge affiché
+
+UI_INFO_MESSAGE
+    - arg1: message d'info
+    - Message d'info jaune affiché
+
+SYSMSG
+    - arg1-4: message, r, g, b
+    - Message système
+
+EXECUTE_CHAT_LINE
+    - arg1: ligne de chat
+    - Commande chat exécutée
+
+CURSOR_UPDATE
+    - État du curseur changé
+
+CURRENT_SPELL_CAST_CHANGED
+    - Sort actuel changé
+
+AUTOFOLLOW_BEGIN
+    - arg1: unité suivie
+    - Suivi commencé
+
+AUTOFOLLOW_END
+    - Suivi terminé
 ```
 
 ---

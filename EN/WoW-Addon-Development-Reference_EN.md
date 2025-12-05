@@ -441,6 +441,315 @@ PickupPlayerMoney(amount)               -- Pick up money
 DropCursorMoney()                       -- Drop money
 ```
 
+### 16. Auction Functions
+
+```lua
+-- Auction House
+CloseAuctionHouse()                     -- Close auction window
+CanSendAuctionQuery()                   -- Can search now?
+QueryAuctionItems("name", minLevel, maxLevel, invTypeIndex, classIndex, subclassIndex, page, isUsable, qualityIndex)
+
+-- Auction information
+GetNumAuctionItems("type")              -- Number of items ("list", "bidder", "owner")
+GetAuctionItemInfo("type", index)       -- Item details
+GetAuctionItemLink("type", index)       -- ItemLink
+GetAuctionItemTimeLeft("type", index)   -- Time left (1-4)
+GetAuctionSellItemInfo()                -- Current sell item info
+
+-- Bidding and selling
+PlaceAuctionBid("type", index, bid)     -- Place a bid
+StartAuction(minBid, buyoutPrice, runTime) -- Start auction
+CancelAuction(index)                    -- Cancel your auction
+ClickAuctionSellItemButton()            -- Place item in sell slot
+
+-- Categories
+GetAuctionItemClasses()                 -- Main categories
+GetAuctionItemSubClasses(classIndex)    -- Subcategories
+```
+
+### 17. Bank Functions
+
+```lua
+CloseBankFrame()                        -- Close bank window
+GetNumBankSlots()                       -- Number of purchased bank slots
+GetBankSlotCost(numSlots)               -- Cost of next bank slot
+PurchaseSlot()                          -- Buy next bank slot
+BankButtonIDToInvSlotID(buttonID)       -- Convert bank button to inventory slot
+```
+
+### 18. Battlefield/PvP Functions
+
+```lua
+-- Queue management
+JoinBattlefield(index[, joinAs])        -- Queue for battleground
+LeaveBattlefield()                      -- Leave battleground
+AcceptBattlefieldPort(index[, accept])  -- Accept/decline port
+GetBattlefieldStatus(index)             -- Queue status
+
+-- Battlefield information
+GetNumBattlefields()                    -- Number of available instances
+GetBattlefieldInfo(index)               -- Battlefield details
+GetBattlefieldWinner()                  -- Who won
+GetBattlefieldInstanceRunTime()         -- Time since start (ms)
+
+-- Scores
+GetNumBattlefieldScores()               -- Number of players in scoreboard
+GetBattlefieldScore(index)              -- Player score info
+RequestBattlefieldScoreData()           -- Request fresh score data
+
+-- Map positions
+GetNumBattlefieldFlagPositions()        -- Number of flags
+GetBattlefieldFlagPosition(index)       -- Flag position on map
+GetBattlefieldPosition(index)           -- Player position
+```
+
+### 19. Guild Functions
+
+```lua
+-- Guild information
+IsInGuild()                             -- In a guild?
+GetGuildInfo("unit")                    -- Guild name of unit
+GetNumGuildMembers(offline)             -- Number of guild members
+GetGuildRosterInfo(index)               -- Member info
+GetGuildRosterMOTD()                    -- Message of the Day
+GuildRoster()                           -- Request guild roster update
+
+-- Guild management
+GuildInviteByName("name")               -- Invite player
+GuildUninviteByName("name")             -- Kick player
+GuildPromoteByName("name")              -- Promote player
+GuildDemoteByName("name")               -- Demote player
+GuildLeave()                            -- Leave guild
+GuildDisband()                          -- Disband guild
+GuildSetMOTD("text")                    -- Set MOTD
+
+-- Permissions
+CanGuildInvite()                        -- Can invite?
+CanGuildPromote()                       -- Can promote?
+CanGuildRemove()                        -- Can kick?
+CanEditMOTD()                           -- Can edit MOTD?
+CanEditPublicNote()                     -- Can edit public notes?
+CanEditOfficerNote()                    -- Can edit officer notes?
+
+-- Notes
+GuildRosterSetPublicNote(index, "note") -- Set public note
+GuildRosterSetOfficerNote(index, "note")-- Set officer note
+```
+
+### 20. Mail Functions
+
+```lua
+-- Reading mail
+GetInboxNumItems()                      -- Number of inbox items
+GetInboxHeaderInfo(index)               -- Mail header info
+GetInboxText(index)                     -- Mail body text
+GetInboxItem(index)                     -- Attachment info
+CheckInbox()                            -- Refresh inbox
+
+-- Taking items
+TakeInboxItem(index)                    -- Take attachment
+TakeInboxMoney(index)                   -- Take money
+TakeInboxTextItem(index)                -- Take letter copy
+DeleteInboxItem(index)                  -- Delete mail
+ReturnInboxItem(index)                  -- Return to sender
+
+-- Sending mail
+SendMail("target", "subject", "body")   -- Send mail
+SetSendMailMoney(amount)                -- Attach money
+SetSendMailCOD(amount)                  -- Set COD amount
+ClickSendMailItemButton()               -- Attach item
+ClearSendMail()                         -- Clear compose window
+
+-- Status
+HasNewMail()                            -- Has new mail?
+CloseMail()                             -- Close mailbox
+```
+
+### 21. Pet Functions
+
+```lua
+-- Pet control
+PetAttack()                             -- Attack target
+PetFollow()                             -- Follow owner
+PetWait()                               -- Stay in place
+PetDefensiveMode()                      -- Defensive stance
+PetAggressiveMode()                     -- Aggressive stance
+PetPassiveMode()                        -- Passive stance
+
+-- Pet actions
+CastPetAction(index)                    -- Use pet ability
+TogglePetAutocast(index)                -- Toggle autocast
+GetPetActionInfo(index)                 -- Action bar slot info
+GetPetActionCooldown(index)             -- Ability cooldown
+IsPetAttackActive()                     -- Is attacking?
+PetStopAttack()                         -- Stop attacking
+
+-- Pet information
+GetPetExperience()                      -- XP and max XP
+GetPetHappiness()                       -- Happiness level
+GetPetLoyalty()                         -- Loyalty level
+GetPetFoodTypes()                       -- Accepted food types
+GetPetTrainingPoints()                  -- Training points
+HasPetUI()                              -- Has pet interface?
+
+-- Pet management
+PetDismiss()                            -- Dismiss pet
+PetAbandon()                            -- Abandon pet permanently
+PetRename("name")                       -- Rename pet
+PetCanBeRenamed()                       -- Can rename?
+PetCanBeAbandoned()                     -- Can abandon?
+```
+
+### 22. Taxi Functions
+
+```lua
+NumTaxiNodes()                          -- Number of flight points
+TaxiNodeName(slot)                      -- Flight point name
+TaxiNodeCost(slot)                      -- Cost in copper
+TaxiNodeGetType(slot)                   -- Status ("CURRENT", "REACHABLE", "DISTANT")
+TaxiNodePosition(slot)                  -- Position on map
+TakeTaxiNode(slot)                      -- Take flight
+CloseTaxiMap()                          -- Close flight map
+UnitOnTaxi("unit")                      -- Is unit flying?
+```
+
+### 23. Trade Functions
+
+```lua
+-- Trade management
+InitiateTrade("unit")                   -- Start trade with unit
+AcceptTrade()                           -- Accept trade
+CancelTrade()                           -- Cancel trade
+CloseTrade()                            -- Close trade window
+
+-- Trade items
+ClickTradeButton(index)                 -- Click trade slot (1-7)
+GetTradePlayerItemInfo(index)           -- Your item info
+GetTradePlayerItemLink(index)           -- Your item link
+GetTradeTargetItemInfo(index)           -- Their item info
+GetTradeTargetItemLink(index)           -- Their item link
+
+-- Trade money
+SetTradeMoney(amount)                   -- Set trade money
+GetPlayerTradeMoney()                   -- Your money offered
+GetTargetTradeMoney()                   -- Their money offered
+```
+
+### 24. TradeSkill Functions
+
+```lua
+-- TradeSkill window
+CloseTradeSkill()                       -- Close window
+GetNumTradeSkills()                     -- Number of recipes
+GetFirstTradeSkill()                    -- First non-header index
+GetTradeSkillLine()                     -- Skill name and level
+
+-- Recipe information
+GetTradeSkillInfo(index)                -- Recipe info
+GetTradeSkillIcon(index)                -- Recipe icon
+GetTradeSkillNumMade(index)             -- Items produced
+GetTradeSkillCooldown(index)            -- Cooldown remaining
+GetTradeSkillItemLink(index)            -- Result item link
+
+-- Reagents
+GetTradeSkillNumReagents(index)         -- Number of reagent types
+GetTradeSkillReagentInfo(index, reagentIndex) -- Reagent info
+GetTradeSkillReagentItemLink(index, reagentIndex) -- Reagent item link
+
+-- Crafting
+DoTradeSkill(index[, count])            -- Craft item
+SelectTradeSkill(index)                 -- Select recipe
+GetTradeSkillSelectionIndex()           -- Selected recipe
+
+-- Filtering
+GetTradeSkillSubClasses()               -- Available subcategories
+GetTradeSkillInvSlots()                 -- Available slot types
+CollapseTradeSkillSubClass(index)       -- Collapse header
+ExpandTradeSkillSubClass(index)         -- Expand header
+```
+
+### 25. Trainer Functions
+
+```lua
+-- Trainer window
+CloseTrainer()                          -- Close trainer window
+GetNumTrainerServices()                 -- Number of trainable skills
+GetTrainerGreetingText()                -- Trainer greeting
+
+-- Skill information
+GetTrainerServiceInfo(index)            -- Skill info
+GetTrainerServiceDescription(index)     -- Skill description
+GetTrainerServiceIcon(index)            -- Skill icon
+GetTrainerServiceCost(index)            -- Skill cost
+GetTrainerServiceLevelReq(index)        -- Required level
+GetTrainerServiceSkillReq(index)        -- Required skill
+
+-- Learning
+BuyTrainerService(index)                -- Learn skill
+IsTradeskillTrainer()                   -- Is tradeskill trainer?
+IsTalentTrainer()                       -- Is class trainer?
+```
+
+### 26. Honor/PvP Functions
+
+```lua
+-- Honor statistics
+GetPVPSessionStats()                    -- This session HKs/DHKs
+GetPVPYesterdayStats()                  -- Yesterday's stats
+GetPVPThisWeekStats()                   -- This week's stats
+GetPVPLastWeekStats()                   -- Last week's stats
+GetPVPLifetimeStats()                   -- Lifetime stats
+
+-- Rank information
+GetPVPRankInfo(rank[, "unit"])          -- Rank name and number
+GetPVPRankProgress()                    -- Progress to next rank (0-1)
+UnitPVPRank("unit")                     -- Unit's PvP rank
+UnitPVPName("unit")                     -- Name with rank prefix
+
+-- Inspection
+RequestInspectHonorData()               -- Request inspected honor
+HasInspectHonorData()                   -- Data available?
+GetInspectHonorData()                   -- Inspected unit's honor
+```
+
+### 27. Faction/Reputation Functions
+
+```lua
+GetNumFactions()                        -- Number of faction entries
+GetFactionInfo(index)                   -- Faction details
+ExpandFactionHeader(index)              -- Expand faction header
+CollapseFactionHeader(index)            -- Collapse faction header
+FactionToggleAtWar(index)               -- Toggle at war status
+SetWatchedFactionIndex(index)           -- Watch faction on rep bar
+GetWatchedFactionInfo()                 -- Watched faction info
+IsFactionInactive(index)                -- Is faction inactive?
+SetFactionActive(index)                 -- Set faction active
+SetFactionInactive(index)               -- Set faction inactive
+```
+
+### 28. Who/Friends Functions
+
+```lua
+-- Who search
+SendWho("filter")                       -- Send /who query
+GetNumWhoResults()                      -- Number of results
+GetWhoInfo(index)                       -- Result info
+SetWhoToUI(flag)                        -- Send to UI vs chat
+
+-- Friends
+GetNumFriends()                         -- Number of friends
+GetFriendInfo(index)                    -- Friend info
+AddFriend("name")                       -- Add friend
+RemoveFriend("name" or index)           -- Remove friend
+ShowFriends()                           -- Request friend update
+
+-- Ignore
+GetNumIgnores()                         -- Number of ignores
+GetIgnoreName(index)                    -- Ignored name
+AddIgnore("name")                       -- Add to ignore
+DelIgnore("name")                       -- Remove from ignore
+```
+
 ---
 
 ## Event System
@@ -818,6 +1127,383 @@ PLAYER_PVP_KILLS_CHANGED
 PLAYER_FLAGS_CHANGED
     - arg1: unitID
     - Flags change (AFK, DND, etc.)
+```
+
+#### 15. Auction House Events
+
+```
+AUCTION_HOUSE_SHOW
+    - Auction house window opened
+
+AUCTION_HOUSE_CLOSED
+    - Auction house window closed
+
+AUCTION_ITEM_LIST_UPDATE
+    - Auction list updated
+
+AUCTION_OWNED_LIST_UPDATE
+    - Your auctions list updated
+
+AUCTION_BIDDER_LIST_UPDATE
+    - Your bids list updated
+
+NEW_AUCTION_UPDATE
+    - New auction created
+```
+
+#### 16. Duel Events
+
+```
+DUEL_REQUESTED
+    - arg1: opponent name
+    - Duel challenge received
+
+DUEL_OUTOFBOUNDS
+    - Player left duel boundaries
+
+DUEL_INBOUNDS
+    - Player back in duel boundaries
+
+DUEL_FINISHED
+    - Duel ended
+```
+
+#### 17. Guild Events
+
+```
+GUILD_ROSTER_UPDATE
+    - Guild roster data updated
+
+GUILD_MOTD
+    - Guild Message of the Day received
+
+GUILD_INVITE_REQUEST
+    - arg1: inviter name, arg2: guild name
+    - Guild invitation received
+
+GUILD_INVITE_CANCEL
+    - Guild invitation declined
+
+GUILD_REGISTRAR_SHOW
+    - Guild registrar window opened
+
+GUILD_REGISTRAR_CLOSED
+    - Guild registrar window closed
+```
+
+#### 18. Trade Events
+
+```
+TRADE_SHOW
+    - Trade window opened
+
+TRADE_CLOSED
+    - Trade window closed
+
+TRADE_REQUEST
+    - arg1: player name
+    - Trade request received
+
+TRADE_REQUEST_CANCEL
+    - Trade request cancelled
+
+TRADE_ACCEPT_UPDATE
+    - arg1: player accepted (1/0), arg2: target accepted (1/0)
+    - Trade acceptance status changed
+
+TRADE_MONEY_CHANGED
+    - Money in trade changed
+
+TRADE_PLAYER_ITEM_CHANGED
+    - arg1: item slot
+    - Your trade item changed
+
+TRADE_TARGET_ITEM_CHANGED
+    - arg1: item slot
+    - Target's trade item changed
+
+TRADE_UPDATE
+    - Trade window updated
+```
+
+#### 19. Gossip/NPC Interaction Events
+
+```
+GOSSIP_SHOW
+    - NPC gossip window opened
+
+GOSSIP_CLOSED
+    - arg1: mouse button (nil if out of range)
+    - NPC gossip window closed
+
+GOSSIP_ENTER_CODE
+    - Code entry requested
+```
+
+#### 20. Pet Events
+
+```
+PET_BAR_UPDATE
+    - Pet action bar updated
+
+PET_BAR_UPDATE_COOLDOWN
+    - Pet ability cooldown started
+
+PET_BAR_SHOWGRID
+    - Pet bar should be displayed
+
+PET_BAR_HIDEGRID
+    - Pet bar should be hidden
+
+PET_ATTACK_START
+    - Pet started attacking
+
+PET_ATTACK_STOP
+    - Pet stopped attacking
+
+PET_UI_UPDATE
+    - Pet UI needs update
+
+PET_UI_CLOSE
+    - Pet UI closed
+
+PET_STABLE_SHOW
+    - Stable window opened
+
+PET_STABLE_UPDATE
+    - Stable information updated
+
+PET_STABLE_CLOSED
+    - Stable window closed
+```
+
+#### 21. Trainer/Craft Events
+
+```
+TRAINER_SHOW
+    - Trainer window opened
+
+TRAINER_UPDATE
+    - Trainer window updated
+
+TRAINER_CLOSED
+    - Trainer window closed
+
+CRAFT_SHOW
+    - arg1: mouse button
+    - Craft window opened (Enchanting)
+
+CRAFT_UPDATE
+    - Craft window updated
+
+CRAFT_CLOSE
+    - arg1: mouse button
+    - Craft window closed
+
+TRADE_SKILL_SHOW
+    - Trade skill window opened
+
+TRADE_SKILL_UPDATE
+    - Trade skill window updated
+
+TRADE_SKILL_CLOSE
+    - Trade skill window closed
+```
+
+#### 22. Taxi/Travel Events
+
+```
+TAXIMAP_OPENED
+    - Flight path map opened
+
+TAXIMAP_CLOSED
+    - Flight path map closed
+```
+
+#### 23. Bank Events
+
+```
+BANKFRAME_OPENED
+    - Bank window opened
+
+BANKFRAME_CLOSED
+    - Bank window closed
+
+PLAYERBANKSLOTS_CHANGED
+    - Bank slot content changed
+
+PLAYERBANKBAGSLOTS_CHANGED
+    - Bank bag slot changed
+```
+
+#### 24. Combat Log Events
+
+```
+CHAT_MSG_COMBAT_SELF_HITS
+    - arg1: combat message
+    - You hit something
+
+CHAT_MSG_COMBAT_SELF_MISSES
+    - arg1: combat message
+    - You missed
+
+CHAT_MSG_COMBAT_CREATURE_VS_SELF_HITS
+    - arg1: combat message
+    - Creature hit you
+
+CHAT_MSG_COMBAT_CREATURE_VS_SELF_MISSES
+    - arg1: combat message
+    - Creature missed you
+
+CHAT_MSG_COMBAT_CREATURE_VS_PARTY_HITS
+    - arg1: combat message
+    - Creature hit party member
+
+CHAT_MSG_COMBAT_CREATURE_VS_CREATURE_HITS
+    - arg1: combat message
+    - Creature hit another creature
+
+CHAT_MSG_COMBAT_HOSTILE_DEATH
+    - arg1: death message
+    - Hostile unit died
+
+CHAT_MSG_COMBAT_FRIENDLY_DEATH
+    - Friendly unit died
+
+CHAT_MSG_COMBAT_XP_GAIN
+    - arg1: message
+    - XP gained from combat
+
+CHAT_MSG_COMBAT_HONOR_GAIN
+    - arg1: message
+    - Honor gained
+```
+
+#### 25. Spell Combat Log Events
+
+```
+CHAT_MSG_SPELL_SELF_DAMAGE
+    - arg1: combat message
+    - Your spell dealt damage
+
+CHAT_MSG_SPELL_SELF_BUFF
+    - arg1: combat message
+    - Your beneficial spell
+
+CHAT_MSG_SPELL_CREATURE_VS_SELF_DAMAGE
+    - arg1: combat message
+    - Creature spell hit you
+
+CHAT_MSG_SPELL_PERIODIC_SELF_DAMAGE
+    - arg1: message
+    - Periodic damage on you (DoTs)
+
+CHAT_MSG_SPELL_PERIODIC_SELF_BUFFS
+    - arg1: message
+    - Periodic buff effect (HoTs)
+
+CHAT_MSG_SPELL_AURA_GONE_SELF
+    - arg1: message
+    - Buff/debuff faded from you
+
+CHAT_MSG_SPELL_AURA_GONE_OTHER
+    - arg1: message
+    - Buff/debuff faded from other
+
+CHAT_MSG_SPELL_FAILED_LOCALPLAYER
+    - arg1: message
+    - Your spell failed
+```
+
+#### 26. Miscellaneous Events
+
+```
+PLAYER_CAMPING
+    - Player is camping (logout)
+
+PLAYER_QUITING
+    - Player hit quit button
+
+PLAYER_UPDATE_RESTING
+    - Rest state changed
+
+PLAYER_XP_UPDATE
+    - XP updated
+
+PLAYER_LEVEL_UP
+    - arg1: new level, arg2-9: stat gains
+    - Player leveled up
+
+RESURRECT_REQUEST
+    - arg1: player name
+    - Resurrection offered
+
+CONFIRM_XP_LOSS
+    - Spirit healer confirmation
+
+CONFIRM_BINDER
+    - Hearthstone bind confirmation
+
+CONFIRM_SUMMON
+    - Summon confirmation
+
+CONFIRM_TALENT_WIPE
+    - Talent reset confirmation
+
+CONFIRM_PET_UNLEARN
+    - Pet unlearn confirmation
+
+SCREENSHOT_SUCCEEDED
+    - Screenshot taken
+
+SCREENSHOT_FAILED
+    - Screenshot failed
+
+TIME_PLAYED_MSG
+    - arg1: total time, arg2: level time
+    - /played response
+
+MEMORY_EXHAUSTED
+    - arg1: memory limit (MB)
+    - UI memory limit reached
+
+MEMORY_RECOVERED
+    - Recovered from memory error
+
+LANGUAGE_LIST_CHANGED
+    - Available languages changed
+
+SKILL_LINES_CHANGED
+    - Skills updated
+
+UI_ERROR_MESSAGE
+    - arg1: error message
+    - Red error message displayed
+
+UI_INFO_MESSAGE
+    - arg1: info message
+    - Yellow info message displayed
+
+SYSMSG
+    - arg1-4: message, r, g, b
+    - System message
+
+EXECUTE_CHAT_LINE
+    - arg1: chat line
+    - Chat command executed
+
+CURSOR_UPDATE
+    - Cursor state changed
+
+CURRENT_SPELL_CAST_CHANGED
+    - Current spell changed
+
+AUTOFOLLOW_BEGIN
+    - arg1: unit being followed
+    - Started following
+
+AUTOFOLLOW_END
+    - Stopped following
 ```
 
 ---
