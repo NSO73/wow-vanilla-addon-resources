@@ -36,6 +36,12 @@ The `Interface/` directory contains extracted game assets organized by UI compon
 - **Buttons** - Button textures and assets
 - **FrameXML** - Default UI XML definitions
 
+### 🧩 Examples
+
+The `Examples/` directory contains complete, real-world addons to study end to end:
+
+- **[AutoLFM](Examples/AutoLFM/)** - Archived snapshot of a polished Turtle WoW addon (automated LFM broadcaster). Demonstrates file separation, saved variables, XML templates, and a command-bus (Maestro) architecture, with full developer documentation in [`Examples/AutoLFM/_wiki/`](Examples/AutoLFM/_wiki/). See [Examples/README.md](Examples/README.md).
+
 ## 🎯 Target Versions
 
 - World of Warcraft 1.12.1 (Vanilla)

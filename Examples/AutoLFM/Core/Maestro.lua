@@ -1,0 +1,833 @@
+--=============================================================================
+-- AutoLFM: Maestro System
+--=============================================================================
+AutoLFM = AutoLFM or {}
+AutoLFM.Core = AutoLFM.Core or {}
+AutoLFM.Core.Maestro = {}
+
+--=============================================================================
+-- SAFE REGISTRATION
+--=============================================================================
+local pendingInits = {}
+local pendingStates = {}
+
+--- Safely registers state declarations before Maestro is fully loaded
+--- Queues the registration if Maestro.RegisterState is not yet available
+--- @param namespace string - Unique identifier for this state
+--- @param initialValue any - Initial state value
+--- @param options table - Optional table with id
+function AutoLFM.Core.SafeRegisterState(namespace, initialValue, options)
+  if AutoLFM.Core.Maestro.RegisterState then
+      AutoLFM.Core.Maestro.RegisterState(namespace, initialValue, options)
+      return
+  end
+
+  table.insert(pendingStates, {
+      namespace = namespace,
+      initialValue = initialValue,
+      options = options or {}
+  })
+end
+
+--- Safely registers an initialization handler before Maestro is fully loaded
+--- Queues the registration if Maestro.RegisterInit is not yet available
+--- @param id string - Unique identifier for the initialization handler
+--- @param handler function - The initialization function to execute
+--- @param options table - Optional table with dependencies and order
+function AutoLFM.Core.SafeRegisterInit(id, handler, options)
+  if AutoLFM.Core.Maestro.RegisterInit then
+      AutoLFM.Core.Maestro.RegisterInit(id, handler, options)
+      return
+  end
+
+  table.insert(pendingInits, {
+      id = id,
+      handler = handler,
+      options = options or {}
+  })
+end
+
+--=============================================================================
+-- PRIVATE STATE
+--=============================================================================
+local commands, commandsRegistry, commandCounter = {}, {}, 0
+local events, eventsRegistry, eventCounter = {}, {}, 0
+local listeners, listenersRegistry, listenerCounter = {}, {}, 0
+local initHandlers, initRegistry, initCounter = {}, {}, 0
+local stateCounter = 0
+local isInitialized = false
+
+--- Generates or validates an ID, updating the counter if needed
+--- @param providedId string|nil - Optional provided ID (e.g., "C01")
+--- @param prefix string - ID prefix (e.g., "C", "E", "L", "I", "S")
+--- @param counter number - Current counter value
+--- @return string, number - The ID and updated counter
+local function getOrGenerateId(providedId, prefix, counter)
+  if not providedId then
+    counter = counter + 1
+    return prefix .. string.format("%02d", counter), counter
+  end
+  local idNum = tonumber(string.sub(providedId, 2))
+  if idNum and idNum > counter then
+    counter = idNum
+  end
+  return providedId, counter
+end
+
+--=============================================================================
+-- STATE MANAGEMENT
+--=============================================================================
+local stateRegistry = {}
+
+--=============================================================================
+-- COMMAND BUS
+--=============================================================================
+--- Registers a command with its handler function
+--- @param key string - Dot-separated command key (e.g., "MainFrame.Toggle")
+--- @param handler function - The function to execute when command is dispatched
+--- @param options table - Optional table with {silent=bool, order=number}
+--- @return number - The order ID assigned to this command
+function AutoLFM.Core.Maestro.RegisterCommand(key, handler, options)
+  if commands[key] then
+    error("Maestro: Command '" .. key .. "' already registered")
+  end
+
+  local opts = options or {}
+  local commandId
+  commandId, commandCounter = getOrGenerateId(opts.id, "C", commandCounter)
+
+  commands[key] = {
+      handler = handler,
+      silent = opts.silent or false,
+      id = commandId
+  }
+
+  table.insert(commandsRegistry, {
+      id = commandId,
+      key = key,
+      handler = handler
+  })
+  return commandId
+end
+
+--- Generates a human-readable event name from a command key
+--- @param key string - Command key (e.g., "MainFrame.Toggle")
+--- @return string - Generated event name (e.g., "MainFrame toggled")
+local function generateEventName(key)
+  local parts = {}
+  for part in string.gfind(key, "[^%.]+") do
+      table.insert(parts, part)
+  end
+
+  local eventParts = {}
+  local numParts = table.getn(parts)
+
+  if numParts >= 2 then
+      local verb = parts[numParts - 1]
+      local noun = parts[numParts]
+
+      if verb == "Toggle" then
+          table.insert(eventParts, noun)
+          table.insert(eventParts, "toggled")
+      elseif verb == "Set" then
+          table.insert(eventParts, noun)
+          table.insert(eventParts, "set")
+      elseif verb == "Select" then
+          table.insert(eventParts, noun)
+          table.insert(eventParts, "selected")
+      else
+          table.insert(eventParts, verb)
+          table.insert(eventParts, noun)
+          table.insert(eventParts, "executed")
+      end
+  else
+      table.insert(eventParts, parts[numParts])
+      table.insert(eventParts, "executed")
+  end
+
+  return table.concat(eventParts, " ")
+end
+
+--- Dispatches a command or emits an event by key with optional arguments
+--- First checks if key is a registered command, then checks if it's an event
+--- @param key string - The command/event key to dispatch (e.g., "MainFrame.Toggle", "Selection.Changed")
+--- @param ... any - Optional arguments to pass to the command handler or event listeners
+function AutoLFM.Core.Maestro.Dispatch(key, ...)
+  local args = arg  -- Store varargs as table for Lua 5.0 compatibility
+
+  -- Check if it's a registered command first
+  local command = commands[key]
+  if command then
+      if not command.silent then
+          -- Pass arguments to LogCommand for display in logs
+          AutoLFM.Core.Utils.LogCommand(key, command.id, unpack(args))
+
+          local eventName = generateEventName(key)
+          AutoLFM.Core.Utils.LogEvent(eventName)
+      end
+
+      local success, err = pcall(command.handler, unpack(args))
+      if not success then
+          AutoLFM.Core.Utils.LogError("Command '" .. key .. "' failed: " .. tostring(err))
+          error("Maestro: Error executing command '" .. key .. "': " .. tostring(err))
+      end
+      return
+  end
+
+  -- Check if it's a registered event
+  local event = events[key]
+  if event then
+      if not event.silent then
+          -- Pass arguments to LogEvent for display in logs
+          AutoLFM.Core.Utils.LogEvent(key, event.id, unpack(args))
+      end
+
+      -- Call all listeners for this event
+      for i = 1, table.getn(event.listeners) do
+          local success, err = pcall(event.listeners[i], unpack(args))
+          if not success then
+              AutoLFM.Core.Utils.LogError("Event listener failed for '" .. key .. "': " .. tostring(err))
+          end
+      end
+      return
+  end
+
+  -- Neither command nor event
+  error("Maestro: Unknown command or event '" .. key .. "'")
+end
+
+--=============================================================================
+-- EVENT SYSTEM
+--=============================================================================
+--- Registers an event that can be emitted via Dispatch()
+--- Events are notifications without direct handlers - listeners subscribe to them
+--- @param key string - Event key (e.g., "Selection.Changed")
+--- @param options table - Optional table with {silent=bool, id=string}
+--- @return string - The ID assigned to this event (e.g., "E01")
+function AutoLFM.Core.Maestro.RegisterEvent(key, options)
+  if events[key] then
+    error("Maestro: Event '" .. key .. "' already registered")
+  end
+
+  local opts = options or {}
+  local eventId
+  eventId, eventCounter = getOrGenerateId(opts.id, "E", eventCounter)
+
+  events[key] = {
+      listeners = {},
+      silent = opts.silent or false,
+      id = eventId
+  }
+
+  table.insert(eventsRegistry, {
+      id = eventId,
+      key = key
+  })
+
+  return eventId
+end
+
+--- Registers a listener function for an event
+--- The listener will be called whenever the event is dispatched
+--- @param listenerId string - Unique identifier for this listener (e.g., "Message.OnSelectionChanged")
+--- @param eventKey string - The event key to listen to (e.g., "Selection.Changed")
+--- @param callback function - The function to call when event is emitted
+--- @param options table - Optional table with {id=string}
+--- @return string - The ID assigned to this listener (e.g., "L01")
+function AutoLFM.Core.Maestro.Listen(listenerId, eventKey, callback, options)
+  if not events[eventKey] then
+      error("Maestro: Cannot listen to unregistered event '" .. eventKey .. "'")
+      return
+  end
+
+  if type(callback) ~= "function" then
+      error("Maestro: Listener callback must be a function")
+      return
+  end
+
+  table.insert(events[eventKey].listeners, callback)
+
+  local opts = options or {}
+  local listenId
+  listenId, listenerCounter = getOrGenerateId(opts.id, "L", listenerCounter)
+
+  -- Store in listeners registry
+  listeners[listenId] = {
+      eventKey = eventKey,
+      callback = callback
+  }
+
+  table.insert(listenersRegistry, {
+      id = listenId,
+      key = listenerId,
+      eventKey = eventKey
+  })
+
+  return listenId
+end
+
+--- Unregisters a listener function from an event
+--- Removes the listener callback so it won't be called on future events
+--- @param listenerId string - The identifier returned by Listen()
+--- @return boolean - true if listener was found and removed, false otherwise
+function AutoLFM.Core.Maestro.UnListen(listenerId)
+  if not listeners[listenerId] then
+    AutoLFM.Core.Utils.LogWarning("Maestro: UnListen - Listener '" .. listenerId .. "' not found")
+    return false
+  end
+
+  local listenerInfo = listeners[listenerId]
+  local eventKey = listenerInfo.eventKey
+  local callback = listenerInfo.callback
+
+  -- Remove from events listeners array
+  if events[eventKey] then
+    for i = 1, table.getn(events[eventKey].listeners) do
+      if events[eventKey].listeners[i] == callback then
+        table.remove(events[eventKey].listeners, i)
+        break
+      end
+    end
+  end
+
+  -- Remove from listeners registry
+  listeners[listenerId] = nil
+
+  AutoLFM.Core.Utils.LogInfo("Maestro: UnListen - Removed listener '" .. listenerId .. "'")
+  return true
+end
+
+--- Unregisters a command by its key
+--- Removes the command so it can no longer be dispatched
+--- @param key string - The command key to unregister (e.g., "MainFrame.Toggle")
+--- @return boolean - true if command was found and removed, false otherwise
+function AutoLFM.Core.Maestro.UnregisterCommand(key)
+  if not commands[key] then
+    AutoLFM.Core.Utils.LogWarning("Maestro: UnregisterCommand - Command '" .. key .. "' not found")
+    return false
+  end
+
+  -- Remove from commands table
+  commands[key] = nil
+
+  -- Remove from commands registry
+  for i = 1, table.getn(commandsRegistry) do
+    if commandsRegistry[i].key == key then
+      table.remove(commandsRegistry, i)
+      break
+    end
+  end
+
+  AutoLFM.Core.Utils.LogInfo("Maestro: UnregisterCommand - Removed command '" .. key .. "'")
+  return true
+end
+
+--=============================================================================
+-- INITIALIZATION SYSTEM
+--=============================================================================
+--- Registers an initialization handler with optional dependencies
+--- Handlers are executed in dependency order via topological sort
+--- @param id string - Unique identifier for this initialization handler
+--- @param handler function - The initialization function to execute
+--- @param options table - Optional {dependencies=table, order=number}
+--- @return number - The order ID assigned to this handler
+function AutoLFM.Core.Maestro.RegisterInit(id, handler, options)
+  if initHandlers[id] then
+    error("Maestro: Init handler '" .. id .. "' already registered")
+  end
+
+  local opts = options or {}
+  local deps = opts.dependencies or {}
+  local initId
+  initId, initCounter = getOrGenerateId(opts.id, "I", initCounter)
+
+  initHandlers[id] = {
+      handler = handler,
+      dependencies = deps,
+      id = initId
+  }
+
+  table.insert(initRegistry, {
+      id = initId,
+      key = id,
+      handler = handler,
+      dependencies = deps
+  })
+  return initId
+end
+
+--- Processes all state handlers registered via SafeRegisterState before Maestro loaded
+local function flushPendingStates()
+  for i = 1, table.getn(pendingStates) do
+      local reg = pendingStates[i]
+      AutoLFM.Core.Maestro.RegisterState(reg.namespace, reg.initialValue, reg.options)
+  end
+  -- Release memory by removing reference to pending table
+  pendingStates = nil
+end
+
+--- Processes all init handlers registered via SafeRegisterInit before Maestro loaded
+local function flushPendingInits()
+  for i = 1, table.getn(pendingInits) do
+      local reg = pendingInits[i]
+      AutoLFM.Core.Maestro.RegisterInit(reg.id, reg.handler, reg.options)
+  end
+  -- Release memory by removing reference to pending table
+  pendingInits = nil
+end
+
+--[[
+  TOPOLOGICAL SORT ALGORITHM (Kahn's Algorithm)
+
+  Purpose: Determine the correct initialization order for modules with dependencies.
+
+  How it works:
+  1. Build a directed graph where edges represent "depends on" relationships
+  2. Count incoming edges (in-degree) for each node
+  3. Start with nodes that have no dependencies (in-degree = 0)
+  4. Process each node, reducing in-degree of its dependents
+  5. When a dependent's in-degree becomes 0, add it to the queue
+  6. If all nodes are processed, we have a valid order; otherwise, circular dependency exists
+
+  Example:
+    A depends on nothing (in-degree = 0) → processed first
+    B depends on A (in-degree = 1) → processed after A
+    C depends on A and B (in-degree = 2) → processed after both A and B
+
+  Time complexity: O(V + E) where V = vertices (handlers), E = edges (dependencies)
+]]
+
+--- Builds the dependency graph for topological sort
+--- Creates three data structures needed for Kahn's algorithm:
+--- - inDegree: how many dependencies each handler has (incoming edge count)
+--- - adjacency: which handlers depend on each handler (outgoing edges)
+--- - allIds: list of all handler IDs for iteration
+--- @param handlers table - Map of {id = {handler, dependencies}} entries
+--- @return table, table, table - inDegree map, adjacency map, sorted array of all IDs
+local function buildDependencyGraph(handlers)
+  local inDegree = {}   -- inDegree[id] = number of dependencies this handler has
+  local adjacency = {}  -- adjacency[id] = array of handlers that depend on this one
+  local allIds = {}     -- All handler IDs for iteration
+
+  -- Step 1: Initialize data structures for each handler
+  -- Every handler starts with in-degree 0 and empty adjacency list
+  for id, data in pairs(handlers) do
+      table.insert(allIds, id)
+      inDegree[id] = 0
+      adjacency[id] = {}
+  end
+
+  -- Sort by ID to ensure deterministic order across runs
+  -- Without this, pairs() iteration order is undefined
+  table.sort(allIds, function(a, b)
+      local idA = handlers[a].id or "I99"
+      local idB = handlers[b].id or "I99"
+      return idA < idB
+  end)
+
+  -- Step 2: Build edges from dependencies
+  -- For each dependency: dependency → handler (dependency must run first)
+  -- Increment in-degree of the handler (it has one more thing to wait for)
+  for id, data in pairs(handlers) do
+      for i = 1, table.getn(data.dependencies) do
+          local dep = data.dependencies[i]
+          if not handlers[dep] then
+              error("Maestro: Init handler '" .. id .. "' depends on unknown handler '" .. dep .. "'")
+              return nil, nil, nil
+          end
+          -- Add edge: dep → id (id depends on dep)
+          table.insert(adjacency[dep], id)
+          -- Increment in-degree: id now has one more dependency
+          inDegree[id] = inDegree[id] + 1
+      end
+  end
+
+  return inDegree, adjacency, allIds
+end
+
+--- Finds all nodes with no dependencies (in-degree = 0)
+--- These are the "roots" of the dependency graph - handlers that can run immediately
+--- @param inDegree table - Map of node ID to in-degree count
+--- @param allIds table - Array of all node IDs
+--- @return table - Array of nodes with zero in-degree (ready to process)
+local function findNodesWithoutDependencies(inDegree, allIds)
+  local queue = {}
+  for i = 1, table.getn(allIds) do
+      local id = allIds[i]
+      -- in-degree 0 means no dependencies - this handler can run now
+      if inDegree[id] == 0 then
+          table.insert(queue, id)
+      end
+  end
+  return queue
+end
+
+--- Processes the dependency queue using Kahn's algorithm
+--- This is the core of the topological sort:
+--- 1. Take a node with no remaining dependencies (in-degree = 0)
+--- 2. Add it to the sorted output
+--- 3. "Remove" it from the graph by decrementing in-degree of all dependents
+--- 4. If any dependent now has in-degree 0, add it to the queue
+--- 5. Repeat until queue is empty
+--- @param queue table - Initial queue of nodes with no dependencies
+--- @param inDegree table - Map of node ID to in-degree count
+--- @param adjacency table - Map of node ID to array of dependent nodes
+--- @param handlers table - Original handlers map (for ID sorting)
+--- @param allIds table - Set of all registered node IDs
+--- @return table|nil - Sorted array of node IDs, or nil if circular dependency detected
+local function processDependencyQueue(queue, inDegree, adjacency, handlers, allIds)
+  local sorted = {}  -- Output: handlers in correct initialization order
+
+  while table.getn(queue) > 0 do
+      -- Sort queue by ID for deterministic output order
+      -- Without this, handlers with same dependencies could run in any order
+      table.sort(queue, function(a, b)
+          local idA = handlers[a].id or "I99"
+          local idB = handlers[b].id or "I99"
+          return idA < idB
+      end)
+
+      -- Take the first handler from queue (lowest ID among ready handlers)
+      local current = table.remove(queue, 1)
+      table.insert(sorted, current)
+
+      -- "Remove" this handler from the graph by processing its dependents
+      -- For each handler that depends on current, decrement its in-degree
+      for i = 1, table.getn(adjacency[current]) do
+          local neighbor = adjacency[current][i]
+          inDegree[neighbor] = inDegree[neighbor] - 1
+          -- If all dependencies are now satisfied, add to queue
+          if inDegree[neighbor] == 0 then
+              table.insert(queue, neighbor)
+          end
+      end
+  end
+
+  -- Circular dependency detection:
+  -- If we processed all handlers, sorted count == total count
+  -- If some handlers remain (in-degree > 0), they form a cycle
+  if table.getn(sorted) ~= table.getn(allIds) then
+      error("Maestro: Circular dependency detected in init handlers")
+      return nil
+  end
+
+  return sorted
+end
+
+--- Performs topological sort on init handlers using Kahn's algorithm
+--- Resolves dependencies to determine correct initialization order
+--- @param handlers table - Map of {id = {handler, dependencies}} entries
+--- @return table|nil - Array of sorted IDs in initialization order, or nil on error
+local function topologicalSort(handlers)
+  local inDegree, adjacency, allIds = buildDependencyGraph(handlers)
+  if not inDegree then return nil end
+
+  local queue = findNodesWithoutDependencies(inDegree, allIds)
+  return processDependencyQueue(queue, inDegree, adjacency, handlers, allIds)
+end
+
+--- Executes all registered initialization handlers in dependency order
+--- Uses topological sort (Kahn's algorithm) to resolve dependencies
+--- Logs errors but continues initialization on failure
+function AutoLFM.Core.Maestro.RunInit()
+  if isInitialized then
+      return
+  end
+
+  local sorted = topologicalSort(initHandlers)
+  if not sorted then
+      AutoLFM.Core.Utils.PrintError("Failed to initialize: circular dependencies")
+      return
+  end
+
+  -- Phase 1: Log all registered states (in sorted order by ID)
+  local stateList = {}
+  for namespace, data in pairs(stateRegistry) do
+    table.insert(stateList, { namespace = namespace, id = data.id or "S??" })
+  end
+  table.sort(stateList, function(a, b) return a.id < b.id end)
+
+  for i = 1, table.getn(stateList) do
+    local item = stateList[i]
+    local idColored = AutoLFM.Core.Utils.ColorText("[" .. item.id .. "]", "GRAY")
+    AutoLFM.Core.Utils.LogState(idColored .. " " .. item.namespace)
+  end
+
+  -- Phase 1b: Log all registered events (in sorted order by ID)
+  local eventList = {}
+  for i = 1, table.getn(eventsRegistry) do
+    local event = eventsRegistry[i]
+    table.insert(eventList, event)
+  end
+  table.sort(eventList, function(a, b) return a.id < b.id end)
+
+  for i = 1, table.getn(eventList) do
+    local item = eventList[i]
+    local idColored = AutoLFM.Core.Utils.ColorText("[" .. item.id .. "]", "GRAY")
+    AutoLFM.Core.Utils.LogEvent(idColored .. " " .. item.key)
+  end
+
+  -- Phase 1c: Log all registered commands (in sorted order by ID)
+  local commandList = {}
+  for i = 1, table.getn(commandsRegistry) do
+    local cmd = commandsRegistry[i]
+    table.insert(commandList, cmd)
+  end
+  table.sort(commandList, function(a, b) return a.id < b.id end)
+
+  for i = 1, table.getn(commandList) do
+    local item = commandList[i]
+    local idColored = AutoLFM.Core.Utils.ColorText("[" .. item.id .. "]", "GRAY")
+    AutoLFM.Core.Utils.LogCommand(idColored .. " " .. item.key)
+  end
+
+  -- Phase 2: Log all INIT events
+  for i = 1, table.getn(sorted) do
+      local id = sorted[i]
+      local data = initHandlers[id]
+      local idColored = AutoLFM.Core.Utils.ColorText("[" .. (data.id or "I??") .. "]", "GRAY")
+      AutoLFM.Core.Utils.LogInit(idColored .. " " .. id)
+  end
+
+  -- Phase 3: Run all initialization handlers
+  for i = 1, table.getn(sorted) do
+      local id = sorted[i]
+      local data = initHandlers[id]
+
+      local success, err = pcall(data.handler)
+      if not success then
+          AutoLFM.Core.Utils.LogError("Init handler '" .. id .. "' failed: " .. tostring(err))
+      end
+  end
+
+  isInitialized = true
+
+  -- Validate initialization - check all critical states and events are registered
+  local valid, errMsg = AutoLFM.Core.Utils.ValidateInitialization()
+  if not valid then
+    AutoLFM.Core.Utils.LogError("Initialization validation failed: " .. tostring(errMsg))
+  end
+
+  AutoLFM.Core.Utils.PrintSuccess("Successfully loaded!")
+end
+
+--- Returns whether the addon has completed initialization
+--- @return boolean - True if RunInit() has completed successfully
+function AutoLFM.Core.Maestro.IsInitialized()
+  return isInitialized
+end
+
+--=============================================================================
+-- STATE MANAGEMENT API
+--=============================================================================
+--- Registers a state namespace with an initial value
+--- @param namespace string - Unique identifier for this state (e.g., "Selection.Dungeons")
+--- @param initialValue any - Initial state value (can be table, number, boolean, etc.)
+--- @param options table - Optional table with {id=string, validator=function}
+---   validator: Optional function(value) -> boolean that validates state values before SetState
+--- @return string - The ID assigned to this state (e.g., "S01")
+function AutoLFM.Core.Maestro.RegisterState(namespace, initialValue, options)
+  if not namespace or type(namespace) ~= "string" then
+    AutoLFM.Core.Utils.LogError("RegisterState: namespace must be a non-empty string")
+    return
+  end
+
+  if stateRegistry[namespace] then
+    AutoLFM.Core.Utils.LogWarning("RegisterState: namespace '" .. namespace .. "' already registered")
+    return
+  end
+
+  local opts = options or {}
+  local stateId
+  stateId, stateCounter = getOrGenerateId(opts.id, "S", stateCounter)
+
+  stateRegistry[namespace] = {
+    value = initialValue,
+    subscribers = {},
+    id = stateId,
+    validator = opts.validator  -- Optional validator function
+  }
+
+  -- Don't log here anymore - will be logged in batch during RunInit
+  return stateId
+end
+
+--- Gets the current value of a state namespace (READ-ONLY)
+--- @param namespace string - The state namespace to retrieve
+--- @return any - The current state value, or nil if namespace not found
+function AutoLFM.Core.Maestro.GetState(namespace)
+  if not stateRegistry[namespace] then
+    AutoLFM.Core.Utils.LogWarning("GetState: namespace '" .. tostring(namespace) .. "' not registered")
+    return nil
+  end
+
+  return stateRegistry[namespace].value
+end
+
+--- Sets a new value for a state namespace and notifies all subscribers
+--- Emits a Maestro event: "State.Changed.<namespace>"
+--- If a validator was registered, validates the value before setting
+--- @param namespace string - The state namespace to update
+--- @param newValue any - The new state value
+--- @return boolean - true if value was set, false if validation failed
+function AutoLFM.Core.Maestro.SetState(namespace, newValue)
+  if not stateRegistry[namespace] then
+    AutoLFM.Core.Utils.LogError("SetState: namespace '" .. tostring(namespace) .. "' not registered")
+    return false
+  end
+
+  -- Run validator if one was registered
+  local validator = stateRegistry[namespace].validator
+  if validator then
+    local isValid, result = pcall(validator, newValue)
+    if not isValid then
+      AutoLFM.Core.Utils.LogError("SetState: validator error for '" .. namespace .. "': " .. tostring(result))
+      return false
+    end
+    -- If validator returned false/nil, reject the value
+    if not result then
+      AutoLFM.Core.Utils.LogWarning("SetState: validation failed for '" .. namespace .. "'")
+      return false
+    end
+  end
+
+  local oldValue = stateRegistry[namespace].value
+  stateRegistry[namespace].value = newValue
+
+  -- Notify all subscribers
+  local subscribers = stateRegistry[namespace].subscribers
+  for i = 1, table.getn(subscribers) do
+    local success, err = pcall(subscribers[i], newValue, oldValue)
+    if not success then
+      AutoLFM.Core.Utils.LogError("State subscriber failed for '" .. namespace .. "': " .. tostring(err))
+    end
+  end
+
+  -- Emit Maestro event for loose coupling (only if event is registered)
+  local eventName = "State.Changed." .. namespace
+  if events[eventName] then
+    AutoLFM.Core.Maestro.Dispatch(eventName, {
+      namespace = namespace,
+      newValue = newValue,
+      oldValue = oldValue
+    })
+  end
+
+  return true
+end
+
+--- Subscribes a callback function to state changes
+--- The callback receives (newValue, oldValue) when state changes
+--- @param namespace string - The state namespace to watch
+--- @param callback function - Function to call when state changes: callback(newValue, oldValue)
+--- @return boolean - True if subscription successful
+function AutoLFM.Core.Maestro.SubscribeState(namespace, callback)
+  if not stateRegistry[namespace] then
+    AutoLFM.Core.Utils.LogError("SubscribeState: namespace '" .. tostring(namespace) .. "' not registered")
+    return false
+  end
+
+  if type(callback) ~= "function" then
+    AutoLFM.Core.Utils.LogError("SubscribeState: callback must be a function")
+    return false
+  end
+
+  table.insert(stateRegistry[namespace].subscribers, callback)
+  return true
+end
+
+--- Unsubscribes a callback function from state changes
+--- Removes the callback so it won't be called on future state changes
+--- @param namespace string - The state namespace to unwatch
+--- @param callback function - The callback function to remove
+--- @return boolean - True if unsubscription successful, false if callback not found
+function AutoLFM.Core.Maestro.UnSubscribeState(namespace, callback)
+  if not stateRegistry[namespace] then
+    AutoLFM.Core.Utils.LogWarning("UnSubscribeState: namespace '" .. tostring(namespace) .. "' not registered")
+    return false
+  end
+
+  if type(callback) ~= "function" then
+    AutoLFM.Core.Utils.LogError("UnSubscribeState: callback must be a function")
+    return false
+  end
+
+  local subscribers = stateRegistry[namespace].subscribers
+  for i = 1, table.getn(subscribers) do
+    if subscribers[i] == callback then
+      table.remove(subscribers, i)
+      AutoLFM.Core.Utils.LogInfo("UnSubscribeState: Removed subscriber for '" .. namespace .. "'")
+      return true
+    end
+  end
+
+  AutoLFM.Core.Utils.LogWarning("UnSubscribeState: callback not found for '" .. namespace .. "'")
+  return false
+end
+
+--- Updates a state value using a transformer function
+--- Useful for complex state modifications (e.g., table manipulations)
+--- @param namespace string - The state namespace to update
+--- @param transformer function - Function that receives current state and returns new state: newState = transformer(oldState)
+function AutoLFM.Core.Maestro.UpdateState(namespace, transformer)
+  if not stateRegistry[namespace] then
+    AutoLFM.Core.Utils.LogError("UpdateState: namespace '" .. tostring(namespace) .. "' not registered")
+    return
+  end
+
+  if type(transformer) ~= "function" then
+    AutoLFM.Core.Utils.LogError("UpdateState: transformer must be a function")
+    return
+  end
+
+  local currentValue = stateRegistry[namespace].value
+  local success, newValue = pcall(transformer, currentValue)
+
+  if not success then
+    AutoLFM.Core.Utils.LogError("UpdateState: transformer failed for '" .. namespace .. "': " .. tostring(newValue))
+    return
+  end
+
+  AutoLFM.Core.Maestro.SetState(namespace, newValue)
+end
+
+--=============================================================================
+-- REGISTRY DATA GETTER
+--=============================================================================
+--- Returns all registries for debugging
+--- Used by debug console to display registered commands, events, listeners, and handlers
+--- @return table, table, table, table - commandsRegistry, eventsRegistry, listenersRegistry, initRegistry
+function AutoLFM.Core.Maestro.GetRegistry()
+  return commandsRegistry, eventsRegistry, listenersRegistry, initRegistry
+end
+
+--- Returns all registered states as a key-value table with IDs
+--- Used by debug console to display current state
+--- @return table - Table of namespace -> {value, id} mappings
+function AutoLFM.Core.Maestro.GetAllStates()
+  local states = {}
+  for namespace, data in pairs(stateRegistry) do
+    states[namespace] = {
+      value = data.value,
+      id = data.id or "S??"
+    }
+  end
+  return states
+end
+
+--=============================================================================
+-- AUTO-INITIALIZATION
+--=============================================================================
+flushPendingStates()
+flushPendingInits()
+
+--=============================================================================
+-- GAME INITIALIZATION TRIGGER
+--=============================================================================
+-- Handle PLAYER_ENTERING_WORLD to trigger RunInit() when game is ready
+local initFrame = CreateFrame("Frame", "AutoLFM_InitFrame")
+initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+initFrame:SetScript("OnEvent", function()
+  AutoLFM.Core.Maestro.RunInit()
+  initFrame:UnregisterEvent("PLAYER_ENTERING_WORLD")
+end)
